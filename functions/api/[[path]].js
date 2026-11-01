@@ -12,4 +12,7 @@ if(route==='users'&&method==='GET'){let q=(new URL(request.url).searchParams.get
 if(route==='messages'&&method==='GET'){let url=new URL(request.url),peer=url.searchParams.get('with'),after=Number(url.searchParams.get('after')||0);if(!peer||!Number.isSafeInteger(after)||after<0)return json({error:'Invalid chat'},400);let other=await db.prepare('SELECT id FROM users WHERE nickname=?').bind(peer).first();if(!other)return json({error:'User not found'},404);let r=await db.prepare('SELECT m.id,u.nickname sender,m.body,m.created_at FROM messages m JOIN users u ON u.id=m.sender_id WHERE m.id>? AND ((m.sender_id=? AND m.receiver_id=?) OR (m.sender_id=? AND m.receiver_id=?)) ORDER BY m.id LIMIT 200').bind(after,me.id,other.id,other.id,me.id).all();return json({messages:r.results})}
 if(route==='messages'&&method==='POST'){let {to,body}=await request.json();if(typeof to!=='string'||typeof body!=='string'||!body.trim()||body.length>2000)return json({error:'Invalid message'},400);let other=await db.prepare('SELECT id FROM users WHERE nickname=?').bind(to).first();if(!other||other.id===me.id)return json({error:'Recipient not found'},404);await db.prepare('INSERT INTO messages(sender_id,receiver_id,body) VALUES(?,?,?)').bind(me.id,other.id,body.trim()).run();return json({ok:true})}
 return json({error:'Not found'},404)
-}catch(e){return json({error:'Server error'},500)}}
+}catch(e){
+  console.error('Quizchat API error:', e);
+  return json({error:'Server error'},500);
+}}
