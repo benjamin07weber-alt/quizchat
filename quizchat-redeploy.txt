@@ -1,0 +1,1 @@
+QUIZCHAT v1.0 - Activate Cloudflare D1 database
